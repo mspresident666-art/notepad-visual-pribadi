@@ -389,26 +389,7 @@ export default function NotepadApp() {
                     {catatan.is_pinned && !catatan.image_url && (
                       <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 mb-2 inline-block">📌 Disematkan</span>
                     )}
-                    <div 
-                      className={`relative group/copy cursor-copy rounded-lg p-2 -mx-2 transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-slate-50"}`}
-                      onClick={(e) => handleCopy(e, catatan.content, catatan.id)}
-                      title="Klik untuk copy teks"
-                    >
-                      <p className={`text-sm font-medium leading-relaxed line-clamp-3 ${isDark ? "text-slate-200" : "text-slate-700"} ${copiedId === catatan.id ? "text-blue-400" : ""}`}>
-                        {catatan.content}
-                      </p>
-                      <AnimatePresence>
-                        {copiedId === catatan.id ? (
-                          <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="absolute right-2 top-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-lg backdrop-blur-sm z-10">
-                            Copied!
-                          </motion.span>
-                        ) : (
-                          <span className="absolute right-2 top-2 opacity-0 group-hover/copy:opacity-100 transition-opacity bg-blue-500 text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-lg backdrop-blur-sm z-10">
-                            Copy
-                          </span>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                    <p className={`text-sm font-medium leading-relaxed line-clamp-3 ${isDark ? "text-slate-200" : "text-slate-700"}`}>{catatan.content}</p>
                     <div className="mt-3 flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <button
@@ -428,6 +409,12 @@ export default function NotepadApp() {
                           className={`text-[9px] font-bold uppercase tracking-wider ${catatan.is_pinned ? "text-amber-400 hover:text-amber-300" : "text-slate-500 hover:text-amber-400"}`}
                         >
                           {catatan.is_pinned ? "📌" : "📍"} Pin
+                        </button>
+                        <button
+                          onClick={(e) => handleCopy(e, catatan.content, catatan.id)}
+                          className={`text-[9px] font-bold uppercase tracking-wider transition-colors ${copiedId === catatan.id ? "text-emerald-400" : "text-slate-500 hover:text-emerald-400"}`}
+                        >
+                          {copiedId === catatan.id ? "✅ Copied" : "📋 Copy"}
                         </button>
                         {catatan.image_url && (
                           <button

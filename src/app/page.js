@@ -525,12 +525,22 @@ export default function NotepadApp() {
                 </div>
 
                 {/* Description */}
-                <textarea
-                  className={`w-full p-4 rounded-2xl mb-4 h-28 text-sm outline-none resize-none transition focus:ring-2 focus:ring-blue-500 ${isDark ? "bg-white/[0.05] text-white placeholder-slate-600" : "bg-slate-100 text-slate-800 placeholder-slate-400"}`}
-                  placeholder="Tulis deskripsi catatan..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                />
+                <div className="relative mb-4">
+                  {content && (
+                    <button
+                      onClick={(e) => handleCopy(e, content, 'modal')}
+                      className={`absolute right-3 top-3 z-10 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md backdrop-blur-sm transition-all ${copiedId === 'modal' ? "bg-emerald-500 text-white" : "bg-white/10 text-slate-400 hover:bg-white/20 hover:text-white"}`}
+                    >
+                      {copiedId === 'modal' ? "✅ Copied" : "📋 Copy"}
+                    </button>
+                  )}
+                  <textarea
+                    className={`w-full p-4 rounded-2xl h-28 text-sm outline-none resize-none transition focus:ring-2 focus:ring-blue-500 ${isDark ? "bg-white/[0.05] text-white placeholder-slate-600" : "bg-slate-100 text-slate-800 placeholder-slate-400"}`}
+                    placeholder="Tulis deskripsi catatan..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                  />
+                </div>
 
 
 

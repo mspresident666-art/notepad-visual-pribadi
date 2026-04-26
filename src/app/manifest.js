@@ -1,0 +1,23 @@
+export default function manifest() {
+  return {
+    name: 'Notepad Visual by PeanutBolu',
+    short_name: 'Notepad',
+    description: 'Private Visual Notepad',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#0a0e1a',
+    theme_color: '#0a0e1a',
+    icons: [
+      {
+        src: '/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: '/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
+  }
+}

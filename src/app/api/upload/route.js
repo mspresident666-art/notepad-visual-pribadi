@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3 = new S3Client({
   region: "auto",
@@ -11,37 +12,27 @@ const s3 = new S3Client({
 
 export async function POST(request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file");
+    const { filename, contentType } = await request.json();
 
-    if (!file) {
-      return Response.json({ error: "No file provided" }, { status: 400 });
+    if (!filename || !contentType) {
+      return Response.json({ error: "Filename dan ContentType diperlukan" }, { status: 400 });
     }
 
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    if (file.size > maxSize) {
-      return Response.json({ error: "File terlalu besar! Maksimal 100MB." }, { status: 400 });
-    }
+    const ext = filename.split(".").pop();
+    const uniqueFileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const ext = file.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const command = new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: uniqueFileName,
+      ContentType: contentType,
+    });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+    const publicUrl = `/api/media/${uniqueFileName}`;
 
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
-        Key: fileName,
-        Body: buffer,
-        ContentType: file.type,
-      })
-    );
-
-    const publicUrl = `/api/media/${fileName}`;
-
-    return Response.json({ url: publicUrl });
+    return Response.json({ signedUrl, url: publicUrl });
   } catch (error) {
     console.error("Upload error:", error);
-    return Response.json({ error: "Upload gagal: " + error.message }, { status: 500 });
+    return Response.json({ error: "Gagal membuat link upload: " + error.message }, { status: 500 });
   }
 }

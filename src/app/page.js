@@ -161,13 +161,24 @@ export default function NotepadApp() {
 
       setUploadProgress(file.type.startsWith("video/") ? "Mengunggah video..." : "Mengunggah gambar...");
 
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      // 1. Minta Pre-signed URL dari API
+      const res = await fetch("/api/upload", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type }) 
+      });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Upload gagal");
+      if (!res.ok) throw new Error(data.error || "Gagal mendapatkan izin upload");
+
+      // 2. Upload file langsung ke Cloudflare R2 menggunakan Pre-signed URL
+      const uploadRes = await fetch(data.signedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type }
+      });
+
+      if (!uploadRes.ok) throw new Error("Gagal mengunggah file ke server");
 
       setMediaUrl(data.url);
       setUploadProgress("");

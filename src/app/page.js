@@ -270,38 +270,60 @@ export default function NotepadApp() {
   // Download file asli 1:1 dengan nama otomatis
   const handleDownload = async (url, e) => {
     if (e) e.stopPropagation();
+
+    const proxied = toProxyUrl(url);
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, "0");
+    const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+    const timeStr = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const type = isVideo(url) ? "Video" : "Gambar";
+    const ext = isVideo(url) ? "mp4" : "jpg";
+    const fileName = `byPeanutBolu_${type}_${dateStr}_${timeStr}.${ext}`;
+
+    // Deteksi Safari/iOS — Safari tidak reliable dengan fetch+blob untuk streaming
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ||
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
+
+    if (isSafari) {
+      // Safari: langsung buka link dengan ?download=1 (Content-Disposition: attachment)
+      const downloadUrl = `${proxied}${proxied.includes("?") ? "&" : "?"}download=1`;
+      window.open(downloadUrl, "_blank");
+      return;
+    }
+
     try {
-      const proxied = toProxyUrl(url);
+      // Chrome, Firefox, dll: fetch+blob approach
       const res = await fetch(proxied);
+      if (!res.ok) throw new Error("Fetch failed");
       const blob = await res.blob();
 
-      // Tentukan ekstensi: video selalu .mp4, gambar sesuai tipe
-      let ext = "mp4";
+      // Tentukan ekstensi dari content-type jika gambar
+      let finalExt = ext;
       const contentType = res.headers.get("content-type") || "";
       if (contentType.startsWith("image/")) {
-        const imgExt = contentType.split("/")[1]?.replace("jpeg", "jpg");
-        ext = imgExt || "jpg";
+        finalExt = contentType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
       }
+      const finalName = `byPeanutBolu_${type}_${dateStr}_${timeStr}.${finalExt}`;
 
-      // Buat nama file: Notepad_Video_20260426_143052.mp4
-      const now = new Date();
-      const pad = (n) => n.toString().padStart(2, "0");
-      const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
-      const timeStr = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-      const type = isVideo(url) ? "Video" : "Gambar";
-      const fileName = `byPeanutBolu_${type}_${dateStr}_${timeStr}.${ext}`;
-
-      // Auto download ke folder Downloads
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = fileName;
+      a.download = finalName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      alert("Gagal download: " + err.message);
+    } catch {
+      // Fallback umum — gunakan direct link dengan ?download=1
+      const downloadUrl = `${proxied}${proxied.includes("?") ? "&" : "?"}download=1`;
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.target = "_blank";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
